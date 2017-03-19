@@ -1,4 +1,8 @@
 * text=auto
 
+.gitignore text
+*.gitattributes text
+*.md text
+*.txt text
 *.c text
 *.h text
