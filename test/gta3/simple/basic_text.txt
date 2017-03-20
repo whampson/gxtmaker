@@ -1,0 +1,5 @@
+[TEST1]
+This is a sample string.
+
+[DUMMY]
+This needs to be here as the last label does not get compiled.
