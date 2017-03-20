@@ -1,8 +1,9 @@
 * text=auto
 
-.gitignore text
+.gitignore      text
 *.gitattributes text
-*.md text
-*.txt text
-*.c text
-*.h text
+*.md            text
+*.txt           text
+*.c             text
+*.h             text
+test/*          binary
