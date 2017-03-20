@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "assembler.h"
 #include "gxtas.h"
 
 void show_help_info(void)
@@ -29,15 +30,21 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        show_help_info();
+        fprintf(stderr, "%s: error: no input files\n", GXTAS_APP_NAME);
+        return 1;   /* TODO: Meaningful exit codes. */
     }
     else if (strcmp(argv[1], "--version") == 0)
     {
         show_version_info();
+        return 0;
     }
-    else
+    else if (strcmp(argv[1], "--help") == 0)
     {
         show_help_info();
+        return 0;
     }
-    return 0;
+
+    int asm_status = assemble(argv[1], "./a.gxt");
+
+    return asm_status;
 }
