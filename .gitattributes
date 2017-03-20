@@ -2,8 +2,9 @@
 
 .gitignore      text
 *.gitattributes text
+CMakeLists.txt	text
 *.md            text
-*.txt           text
 *.c             text
 *.h             text
-test/*          binary
+*.gxt		binary
+*.txt		binary
