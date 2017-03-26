@@ -1,2 +1,2 @@
-# gxtas
-The GTA Text Assembler
+# gxtmaker
+GTA Text compiler/assembler.

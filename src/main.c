@@ -8,22 +8,23 @@
 #include <string.h>
 
 #include "assembler.h"
-#include "gxtas.h"
+#include "gxtmaker.h"
 
 void show_help_info(void)
 {
-    printf("%s\n", GXTAS_HELP_MESSAGE);
+    printf("%s\n", GXTMAKER_HELP_MESSAGE);
 }
 
 void show_version_info(void)
 {
-    printf("%s - %s\n", GXTAS_APP_NAME, GXTAS_APP_MOTTO);
-    printf("Version %d.%d.%d%s\n", GXTAS_VERSION_MAJOR, GXTAS_VERSION_MINOR,
-                                   GXTAS_VERSION_PATCH, GXTAS_VERSION_BUILD);
+    printf("%s - %s\n", GXTMAKER_APP_NAME, GXTMAKER_APP_MOTTO);
+    printf("Version %d.%d.%d%s\n",
+           GXTMAKER_VERSION_MAJOR, GXTMAKER_VERSION_MINOR,
+           GXTMAKER_VERSION_PATCH, GXTMAKER_VERSION_BUILD);
 
-    printf("\n%s\n", GXTAS_COPYRIGHT_NOTICE);
-    printf("\n%s\n", GXTAS_LICENSE_NOTICE);
-    printf("\n%s\n", GXTAS_WARRANTY_NOTICE);
+    printf("\n%s\n", GXTMAKER_COPYRIGHT_NOTICE);
+    printf("\n%s\n", GXTMAKER_LICENSE_NOTICE);
+    printf("\n%s\n", GXTMAKER_WARRANTY_NOTICE);
 }
 
 int main(int argc, char *argv[])
