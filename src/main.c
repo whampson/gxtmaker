@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "assembler.h"
+#include "compiler.h"
 #include "gxtmaker.h"
 
 void show_help_info(void)
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        fprintf(stderr, "%s: error: no input files\n", GXTAS_APP_NAME);
+        fprintf(stderr, "%s: error: no input files\n", GXTMAKER_APP_NAME);
         return 1;   /* TODO: Meaningful exit codes. */
     }
     else if (strcmp(argv[1], "--version") == 0)
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    int asm_status = assemble(argv[1], "./a.gxt");
+    int compile_status = compile(argv[1], "./a.gxt");
 
-    return asm_status;
+    return compile_status;
 }
