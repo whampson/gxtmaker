@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(gxtas)
+project(gxtmaker)
 
 # Ensure GCC is correctly identified
 if(NOT CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_ID MATCHES "GNU")
