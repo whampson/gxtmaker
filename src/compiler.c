@@ -21,11 +21,12 @@
 
 struct compiler_state
 {
-    unsigned int src_row;   /* Spurce file line number. */
+    unsigned int src_row;   /* Source file line number. */
     unsigned int src_col;   /* Source file column number. */
 
     bool is_reading_key;    /* GXT key is being read. */
     bool is_reading_val;    /* GXT string is being read. */
+    bool is_reading_comment;
     bool key_encountered;   /* Start of next GXT key located. */
     bool val_encountered;   /* Start of next GXT string located. */
 
@@ -33,11 +34,45 @@ struct compiler_state
     int num_keys;               /* Number of keys read in total. */
 };
 
+/*struct gxt_tabl
+{
+    struct gxt_tkey *tkey;
+    struct gxt_tdat *tdat;
+};*/
+
+/* Basic compilation process (ideas, GTA III format)
+ *   1) Process file in chunks
+ *      a) Store keys in list, w/ pointers to their corresponding values
+ *         (build TKEY)
+ *      b) Store values in list (build TDAT)
+ *         i) Translate characters on-the-fly, i.e. convert to GTA charset
+ *            a) Need to construct a table of GTA charset, conversion will be
+ *               ASCII->GTA or Unicode->GTA
+ *            b) LATER: pass input encoding as compiler flag if something other
+ *               than UTF-8/ASCII
+ *            c) Japanese??? perhaps spaceeinstein can help with this
+ *        ii) Store strings in a linked list as they can be of any size
+ *            (should maybe see if an upper limit is imposed by game executable and
+ *            set a max size based on that)
+ *   2) Sort TKEY alphabetically (LATER: introduce a compiler flag to disable
+ *      this if wanted)
+ *   3) Output the GXT file
+ */
+
+/* TODO (simplified)
+ *   1) Process comments
+ *   2) Devise a way to store keys and values
+ *   3) Build key and value tables using above
+ *   4) Output GXT file
+ *   5) Develop methods for source file error checking
+ */
+
 
 static int compile_chunk(const char *chunk, size_t chunk_size,
                          struct compiler_state *state);
 static int process_key_token(char tok, struct compiler_state *state);
 static int process_value_token(char tok, struct compiler_state *state);
+static int process_comment_token(char tok, struct compiler_state *state);
 
 static bool is_whitespace(char c);
 
@@ -82,15 +117,18 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
                          struct compiler_state *state)
 {
     char tok;
-    int sub_result = 0;
+    int result = 0;
 
     for (size_t i = 0; i < chunk_size; i++, state->src_col++)
     {
         tok = chunk[i];
 
-        /* Handle CR and LF */
+        /* Check whether compiler needs to switch processing mode */
         switch (tok)
         {
+            /* Only act on LF characters, ignore pesky Windows CR characters */
+            /* TODO: Check line-ending compliance with current input file
+               encoding */
             case '\n':
                 state->src_row++;
                 state->src_col = 0;
@@ -98,36 +136,48 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
 
             case '\r':
                 continue;
+
+            case START_OF_KEY:
+                if (state->val_encountered)
+                {
+                    printf("Done reading value.\n");
+                }
+
+                state->is_reading_key = true;
+                state->is_reading_val = false;
+                state->is_reading_comment = false;
+                state->key_encountered = true;
+                state->current_key_chars_read = 0;
+                continue;
+
+            case START_OF_COMMENT:
+                state->is_reading_key = false;
+                state->is_reading_val = false;
+                state->is_reading_comment = true;
+                state->key_encountered = true;
+                continue;
         }
 
         if (state->is_reading_key)
         {
-            sub_result = process_key_token(tok, state);
-        }
-        else if (tok == START_OF_KEY)
-        {
-            if (state->val_encountered)
-            {
-                printf("Done reading value.\n");
-            }
-
-            state->is_reading_key = true;
-            state->is_reading_val = false;
-            state->key_encountered = true;
-            state->current_key_chars_read = 0;
+            result = process_key_token(tok, state);
         }
         else if (state->is_reading_val)
         {
-            sub_result = process_value_token(tok, state);
+            result = process_value_token(tok, state);
+        }
+        else if (state->is_reading_comment)
+        {
+            result = process_comment_token(tok, state);
         }
 
-        if (sub_result != 0)
+        if (result != 0)
         {
-            return sub_result;
+            break;
         }
     }
 
-    return 0;
+    return result;
 }
 
 static int process_key_token(char tok, struct compiler_state *state)
@@ -137,6 +187,7 @@ static int process_key_token(char tok, struct compiler_state *state)
         printf("Done reading key.\n");
         state->is_reading_key = false;
         state->is_reading_val = true;
+        state->is_reading_comment = false;
         state->key_encountered = false;
         state->val_encountered = false;
         state->num_keys++;
@@ -170,6 +221,25 @@ static int process_value_token(char tok, struct compiler_state *state)
         printf("V(%02d:%02d) = %c\n",
                state->src_row, state->src_col, tok);
     }
+
+    return 0;
+}
+
+static int process_comment_token(char tok, struct compiler_state *state)
+{
+    if (tok == END_OF_COMMENT)
+    {
+        printf("Done reading comment.\n");
+        state->is_reading_key = false;
+        state->is_reading_val = false;
+        state->is_reading_comment = false;
+        state->key_encountered = false;
+        state->val_encountered = false;
+
+        return 0;
+    }
+    printf("C(%02d:%02d) = %c\n",
+           state->src_row, state->src_col, tok);
 
     return 0;
 }
