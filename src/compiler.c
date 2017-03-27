@@ -83,7 +83,7 @@ int compile(const char *src_file, const char *out_file)
     if (src == NULL)
     {
         error(E_FILE_UNREADABLE, src_file);
-        return 1;
+        return COMPILE_FILE_UNREADABLE;
     }
 
     int bytes_read = 0;
@@ -110,7 +110,7 @@ int compile(const char *src_file, const char *out_file)
 
     printf("Read %d keys in %d chunks.\n", state.num_keys, chunk_count);
 
-    return 0;   /* TODO: Meaningful exit codes. */
+    return COMPILE_SUCCESS;
 }
 
 static int compile_chunk(const char *chunk, size_t chunk_size,
@@ -192,7 +192,7 @@ static int process_key_token(char tok, struct compiler_state *state)
         state->val_encountered = false;
         state->num_keys++;
 
-        return 0;
+        return COMPILE_SUCCESS;
     }
 
     state->current_key_chars_read++;
@@ -201,12 +201,12 @@ static int process_key_token(char tok, struct compiler_state *state)
         fprintf(stderr, "gxt key exceeds maximum length (%02d:%02d)\n",
                 state->src_row, state->src_col);
 
-        return 1;   /* TODO: Meaningful exit codes. */
+        return COMPILE_GXT_KEY_TOO_LONG;
     }
 
     printf("K(%02d:%02d) = %c\n", state->src_row, state->src_col, tok);
 
-    return 0;
+    return COMPILE_SUCCESS;
 }
 
 static int process_value_token(char tok, struct compiler_state *state)
@@ -222,7 +222,7 @@ static int process_value_token(char tok, struct compiler_state *state)
                state->src_row, state->src_col, tok);
     }
 
-    return 0;
+    return COMPILE_SUCCESS;
 }
 
 static int process_comment_token(char tok, struct compiler_state *state)
@@ -236,12 +236,12 @@ static int process_comment_token(char tok, struct compiler_state *state)
         state->key_encountered = false;
         state->val_encountered = false;
 
-        return 0;
+        return COMPILE_SUCCESS;
     }
     printf("C(%02d:%02d) = %c\n",
            state->src_row, state->src_col, tok);
 
-    return 0;
+    return COMPILE_SUCCESS;
 }
 
 static bool is_whitespace(char c)

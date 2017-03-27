@@ -33,17 +33,17 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         error(E_MISSING_INPUT_FILE);
-        return 1;   /* TODO: Meaningful exit codes. */
+        return GXTMAKER_EXIT_ARGUMENT_ERROR;
     }
     else if (strcmp(argv[1], "--version") == 0)
     {
         show_version_info();
-        return 0;
+        return GXTMAKER_EXIT_SUCCESS;
     }
     else if (strcmp(argv[1], "--help") == 0)
     {
         show_help_info();
-        return 0;
+        return GXTMAKER_EXIT_SUCCESS;
     }
 
     int compile_status = compile(argv[1], "./a.gxt");
