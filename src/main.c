@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "compiler.h"
+#include "errwarn.h"
 #include "gxtmaker.h"
 
 void show_help_info(void)
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        fprintf(stderr, "%s: error: no input files\n", GXTMAKER_APP_NAME);
+        error(E_MISSING_INPUT_FILE);
         return 1;   /* TODO: Meaningful exit codes. */
     }
     else if (strcmp(argv[1], "--version") == 0)

@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "compiler.h"
+#include "errwarn.h"
 #include "io.h"
 
 #define CHUNK_SIZE 1024
@@ -81,8 +82,7 @@ int compile(const char *src_file, const char *out_file)
     FILE *src = fopen(src_file, "rb");
     if (src == NULL)
     {
-        /* TODO: Error function. */
-        fprintf(stderr, "Unable to open file.\n");
+        error(E_FILE_UNREADABLE, src_file);
         return 1;
     }
 
