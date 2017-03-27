@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 /**
- * Dumps the contents of a buffer to stdout.
+ * Dumps the contents of a buffer to stdout byte-by-byte.
  *
  * @param buf  the buffer to print
  * @param size the size in bytes of the buffer
