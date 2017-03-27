@@ -4,8 +4,8 @@
 * Licensed under the MIT License. See LICENSE at top level directory.
 */
 
-#ifndef _COMPILER_H_
-#define _COMPILER_H_
+#ifndef _GXTMAKER_COMPILER_H_
+#define _GXTMAKER_COMPILER_H_
 
 /*
  * Translates the specified GXT source file into a proper GXT file.
@@ -17,4 +17,4 @@
  */
 int compile(const char *src_file, const char *out_file);
 
-#endif /* _COMPILER_H_ */
+#endif /* _GXTMAKER_COMPILER_H_ */
