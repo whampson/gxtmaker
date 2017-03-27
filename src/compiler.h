@@ -1,3 +1,9 @@
+/*
+* Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
+*
+* Licensed under the MIT License. See LICENSE at top level directory.
+*/
+
 #ifndef _COMPILER_H_
 #define _COMPILER_H_
 
