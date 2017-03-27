@@ -9,10 +9,10 @@
 
 #include "compiler.h"
 #include "errwarn.h"
+#include "gxt.h"
 #include "io.h"
 
 #define CHUNK_SIZE 1024
-#define GXT_KEY_MAX_LEN 8
 
 #define START_OF_KEY        (char) '['
 #define END_OF_KEY          (char) ']'
