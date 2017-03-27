@@ -4,10 +4,14 @@
 * Licensed under the MIT License. See LICENSE at top level directory.
 */
 
+#include <stdio.h>
+
 #include "io.h"
 
 #define NUM_BYTES_PER_LINE 16
 #define NUM_CHARS_PER_BYTE 3
+
+#define MIN(a, b) ((a < b) ? (a) : (b))
 
 void hex_dump(const void *buf, size_t size)
 {
@@ -17,7 +21,7 @@ void hex_dump(const void *buf, size_t size)
     int i;
     int row_len;
     int pad_len;
-    int off = 0;
+    unsigned int off = 0;
 
     do
     {
