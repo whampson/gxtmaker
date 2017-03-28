@@ -6,7 +6,19 @@
 
 #include "list.h"
 
-list * list_create()
+struct node
+{
+    struct node *next;
+    const void *data;
+};
+
+struct list_internal    /* typedef'd in header as 'list' */
+{
+    struct node *head;
+    struct node *tail;
+};
+
+list * list_create(void)
 {
     list *l = (list *) malloc(sizeof(list));
     if (l == NULL)
@@ -26,8 +38,8 @@ bool list_destroy(list *l)
         return false;
     }
 
-    struct list_node *curr = l->head;
-    struct list_node *prev = NULL;
+    struct node *curr = l->head;
+    struct node *prev = NULL;
 
     while (curr != NULL)
     {
@@ -56,7 +68,7 @@ size_t list_size(const list *l)
     }
 
     size_t siz = 0;
-    struct list_node *curr = l->head;
+    struct node *curr = l->head;
     while (curr != NULL)
     {
         siz++;
@@ -68,8 +80,8 @@ size_t list_size(const list *l)
 
 bool list_append(list *l, void *val)
 {
-    size_t siz = sizeof(struct list_node);
-    struct list_node *n = (struct list_node *) malloc(siz);
+    size_t siz = sizeof(struct node);
+    struct node *n = (struct node *) malloc(siz);
 
     n->data = val;
     n->next = NULL;

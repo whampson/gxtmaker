@@ -10,19 +10,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-struct list_node
-{
-    struct list_node *next;
-    const void *data;
-};
+typedef struct list_internal list;
 
-typedef struct list
-{
-    struct list_node *head;
-    struct list_node *tail;
-} list;
-
-list * list_create();
+list * list_create(void);
 
 bool list_destroy(list *l);
 

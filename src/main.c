@@ -58,24 +58,26 @@ int main(int argc, char *argv[])
     for (int i = 0; i < strlen(my_name_is); i++)
     {
         printf("Appending %c\n", my_name_is[i]);
-        list_append(l, &my_name_is[i]);
+        list_append(l, (void *) &my_name_is[i]);
     }
 
     size_t len = list_size(l);
-    printf("List size is %d\n", len);
+    printf("List size is %lu\n", len);
 
-    struct list_node *curr = l->head;
-    char *val = NULL;
+    // TODO: list iterator
 
-    printf("Contents: \"");
-    while (curr != NULL)
-    {
-        val = (char *) curr->data;
-        printf("%c", *val);
+    // list_node *curr = l->head;
+    // char *val = NULL;
 
-        curr = curr->next;
-    }
-    printf("\"\n");
+    // printf("Contents: \"");
+    // while (curr != NULL)
+    // {
+    //     val = (char *) curr->data;
+    //     printf("%c", *val);
+
+    //     curr = curr->next;
+    // }
+    // printf("\"\n");
 
     list_destroy(l);
 
