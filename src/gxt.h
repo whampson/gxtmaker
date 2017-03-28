@@ -31,6 +31,14 @@ struct gxt_key_saiv
     uint32_t name_crc;      /* CRC32 sum of TDAT entry name */
 };
 
+typedef uint16_t gxt_char;
+
+typedef struct gxt_str
+{
+    gxt_char *ch0;
+    size_t len;
+} gxt_str;
+
 /**
  * UTF-8 -> GTA3 character map.
  * Use high bits for column, low bits for row.
