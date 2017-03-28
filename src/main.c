@@ -11,6 +11,8 @@
 #include "errwarn.h"
 #include "gxtmaker.h"
 
+#include "list.h"
+
 void show_help_info(void)
 {
     printf("%s\n", GXTMAKER_HELP_MESSAGE);
@@ -46,7 +48,36 @@ int main(int argc, char *argv[])
         return GXTMAKER_EXIT_SUCCESS;
     }
 
-    int compile_status = compile(argv[1], "./a.gxt");
+    //int compile_status = compile(argv[1], "./a.gxt");
 
-    return compile_status;
+    //return compile_status;
+
+    list *l = list_create();
+
+    const char *my_name_is = "Slim Shady";
+    for (int i = 0; i < strlen(my_name_is); i++)
+    {
+        printf("Appending %c\n", my_name_is[i]);
+        list_append(l, &my_name_is[i]);
+    }
+
+    size_t len = list_size(l);
+    printf("List size is %d\n", len);
+
+    struct list_node *curr = l->head;
+    char *val = NULL;
+
+    printf("Contents: \"");
+    while (curr != NULL)
+    {
+        val = (char *) curr->data;
+        printf("%c", *val);
+
+        curr = curr->next;
+    }
+    printf("\"\n");
+
+    list_destroy(l);
+
+    return 0;
 }
