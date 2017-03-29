@@ -6,41 +6,95 @@
 
 #include "list.h"
 
-struct node
+#include <stdio.h>
+
+struct list_node
 {
-    struct node *next;
+    struct list_node *next;
     const void *data;
 };
 
-struct list_internal    /* typedef'd in header as 'list' */
+struct list_s           /* typedef'd in list.h as 'list' */
 {
-    struct node *head;
-    struct node *tail;
+    struct list_node *head;
+    struct list_node *tail;
+    size_t num_elems;
 };
 
-list * list_create(void)
+struct iterator_s
 {
-    list *l = (list *) malloc(sizeof(list));
-    if (l == NULL)
-    {
-        return NULL;
-    }
+    struct list_node *curr;
+};
 
-    l->head = NULL;
-    l->tail = NULL;
-    return l;
-}
-
-bool list_destroy(list *l)
+bool list_create(list **l)
 {
     if (l == NULL)
     {
         return false;
     }
 
-    struct node *curr = l->head;
-    struct node *prev = NULL;
+    /* Allocate memory for new list. */
+    *l = (list *) malloc(sizeof(list));
+    if (*l == NULL)
+    {
+        return false;
+    }
 
+    (*l)->head = NULL;
+    (*l)->tail = NULL;
+    (*l)->num_elems = 0;
+
+    return true;
+}
+
+bool list_destroy(list **l)
+{
+    if (l == NULL || *l == NULL)
+    {
+        return false;
+    }
+
+    /* Remove all items from the list. */
+    list_clear(*l);
+
+    /* Free the actual list structure. */
+    free(*l);
+    *l = NULL;
+
+    /* Note that the data contained in the list is NOT freed. */
+    /* That task is left up to the client. */
+
+    return true;
+}
+
+bool list_empty(const list *l)
+{
+    return list_size(l) == 0 && l->head == NULL && l->tail == NULL;
+}
+
+size_t list_size(const list *l)
+{
+    if (l == NULL)
+    {
+        /* Not technically correct, since an invalid list doesn't have a size,
+           but it'll have to do. */
+        return 0;
+    }
+
+    return l->num_elems;
+}
+
+bool list_clear(list *l)
+{
+    if (l == NULL)
+    {
+        return false;
+    }
+
+    struct list_node *curr = l->head;
+    struct list_node *prev = NULL;
+
+    /* Iterate across all nodes, freeing each one after visiting. */
     while (curr != NULL)
     {
         prev = curr;
@@ -49,58 +103,146 @@ bool list_destroy(list *l)
         free(prev);
     }
 
-    free(l);
-    l = NULL;
+    /* Reset list to default state. */
+    l->head = NULL;
+    l->tail = NULL;
+    l->num_elems = 0;
 
     return true;
 }
 
-bool list_empty(const list *l)
-{
-    return l == NULL || l->head == NULL || l->tail == NULL;
-}
-
-size_t list_size(const list *l)
-{
-    if (list_empty(l))
-    {
-        return 0;
-    }
-
-    size_t siz = 0;
-    struct node *curr = l->head;
-    while (curr != NULL)
-    {
-        siz++;
-        curr = curr->next;
-    }
-
-    return siz;
-}
-
 bool list_append(list *l, void *val)
 {
-    size_t siz = sizeof(struct node);
-    struct node *n = (struct node *) malloc(siz);
-
-    n->data = val;
-    n->next = NULL;
-
     if (l == NULL)
     {
         return false;
     }
 
-    if (list_empty(l))
+    /* Allocate memory for new node. */
+    size_t node_size = sizeof(struct list_node);
+    struct list_node *n = (struct list_node *) malloc(node_size);
+    if (n == NULL)
     {
+        return false;
+    }
+
+    /* Point the node to its data.
+       We're appending to the end of the list, so next should be NULL. */
+    n->data = val;
+    n->next = NULL;
+
+    if (l->num_elems == 0)
+    {
+        /* Set the head and tail to point to the same node. */
         l->head = n;
         l->tail = l->head;
     }
     else
     {
+        /* Insert the new node after the tail,
+           reassign the tail to point to the new node*/
         l->tail->next = n;
         l->tail = n;
     }
+
+    l->num_elems++;
+    return true;
+}
+
+bool list_remove(list *l, const void *val)
+{
+    if (l == NULL)
+    {
+        return false;
+    }
+
+    struct list_node *curr = l->head;
+    struct list_node *prev = NULL;
+
+    bool removed = false;
+    while (curr != NULL)
+    {
+        /* Checking for address equality, NOT value equality. */
+        if (curr->data != val)
+        {
+            prev = curr;
+            curr = curr->next;
+            continue;
+        }
+
+        if (l->num_elems == 1)
+        {
+            l->head = NULL;
+            l->tail = NULL;
+        }
+        else if (curr == l->head)
+        {
+            l->head = l->head->next;
+        }
+        else if (curr == l->tail)
+        {
+            l->tail = prev;
+            l->tail->next = NULL;
+        }
+        else
+        {
+            prev->next = curr->next;
+        }
+
+        free(curr);
+        l->num_elems--;
+        removed = true;
+        break;
+    }
+
+    return removed;
+}
+
+bool iterator_create(const list *l, iterator **it)
+{
+    if (l == NULL || it == NULL)
+    {
+        return false;
+    }
+
+    *it = (iterator *) malloc(sizeof(iterator));
+    if (*it == NULL)
+    {
+        return false;
+    }
+
+    (*it)->curr = l->head;
+
+    return true;
+}
+
+bool iterator_destroy(iterator **it)
+{
+    if (it == NULL || *it == NULL)
+    {
+        return false;
+    }
+
+    free(*it);
+    *it = NULL;
+
+    return true;
+}
+
+bool iterator_has_next(const iterator *it)
+{
+    return it != NULL && it->curr != NULL;
+}
+
+bool iterator_next(iterator *it, void **val)
+{
+    if (!iterator_has_next(it) || val == NULL)
+    {
+        return false;
+    }
+
+    *val = (void *) it->curr->data;
+    it->curr = it->curr->next;
 
     return true;
 }
