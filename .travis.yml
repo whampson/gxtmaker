@@ -1,7 +1,7 @@
 language: c
 
 compiler:
-    - gcc
+    - gcc-4.8
     - clang
 
 before_script:
