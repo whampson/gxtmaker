@@ -52,34 +52,47 @@ int main(int argc, char *argv[])
 
     //return compile_status;
 
-    list *l = list_create();
+    list *l;
+    list_create(&l);
 
     const char *my_name_is = "Slim Shady";
-    for (int i = 0; i < strlen(my_name_is); i++)
+    for (size_t i = 0; i < strlen(my_name_is); i++)
     {
         printf("Appending %c\n", my_name_is[i]);
         list_append(l, (void *) &my_name_is[i]);
     }
 
-    size_t len = list_size(l);
-    printf("List size is %lu\n", len);
+    iterator *it;
+    iterator_create(l, &it);
 
-    // TODO: list iterator
+    char *c;
+    while (iterator_has_next(it))
+    {
+        iterator_next(it, &c);
+        printf("%c", *c);
+        if (*c == 'a' || *c == 'S')
+        {
+            list_remove(l, c);
+        }
+    }
+    printf("\n");
+    iterator_destroy(&it);
 
-    // list_node *curr = l->head;
-    // char *val = NULL;
+    list_clear(l);
 
-    // printf("Contents: \"");
-    // while (curr != NULL)
-    // {
-    //     val = (char *) curr->data;
-    //     printf("%c", *val);
+    iterator_create(l, &it);
+    while (iterator_has_next(it))
+    {
+        iterator_next(it, &c);
+        printf("%c", *c);
+    }
+    printf("\n");
+    iterator_destroy(&it);
 
-    //     curr = curr->next;
-    // }
-    // printf("\"\n");
+    printf("Size: %d\n", list_size(l));
+    printf("Empty: %d\n", list_empty(l));
 
-    list_destroy(l);
+    list_destroy(&l);
 
     return 0;
 }
