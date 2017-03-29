@@ -68,11 +68,11 @@ int main(int argc, char *argv[])
     char *c;
     while (iterator_has_next(it))
     {
-        iterator_next(it, &c);
+        iterator_next(it, (void **) &c);
         printf("%c", *c);
         if (*c == 'a' || *c == 'S')
         {
-            list_remove(l, c);
+            list_remove(l, (void *) c);
         }
     }
     printf("\n");
@@ -83,13 +83,13 @@ int main(int argc, char *argv[])
     iterator_create(l, &it);
     while (iterator_has_next(it))
     {
-        iterator_next(it, &c);
+        iterator_next(it, (void **) &c);
         printf("%c", *c);
     }
     printf("\n");
     iterator_destroy(&it);
 
-    printf("Size: %d\n", list_size(l));
+    printf("Size: %lu\n", list_size(l));
     printf("Empty: %d\n", list_empty(l));
 
     list_destroy(&l);
