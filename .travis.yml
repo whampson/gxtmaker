@@ -1,8 +1,13 @@
 language: c
+sudo: required
 
 compiler:
     - gcc-4.8
     - clang
+
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y gcc-4.8
 
 before_script:
     - mkdir build
