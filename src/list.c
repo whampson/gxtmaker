@@ -111,7 +111,7 @@ bool list_clear(list *l)
     return true;
 }
 
-bool list_append(list *l, void *val)
+bool list_append(list *l, const void *val)
 {
     if (l == NULL)
     {
