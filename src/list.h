@@ -5,8 +5,23 @@
  */
 
 /**
- * This file contains definitions for a simple list container and list
- * iterator.
+ * Declarations for a simple list container and list iterator.
+ *
+ * list:
+ * The 'list' type may be used to arrange elements of any type in a linear,
+ * sequential fashion. It is recommended that all elements in the list be of
+ * the same type, but not a requirement.
+ *
+ * The 'list' type is mutable. This is because the list only contains pointers
+ * to elements, not the elements themselves. This means that if a given element
+ * is modified somewhere in the program, the modification will also be present
+ * in the list.
+ *
+ * iterator:
+ * The 'iterator' type is used for traversing across all elements of a given
+ * list. Iterators can only traverse a list once. If a list needs to be
+ * traversed multiple times, multiple iterators need to be created (one for
+ * each traversal).
  */
 
 #ifndef _GXTMAKER_LIST_H_
@@ -85,7 +100,8 @@ bool list_clear(list *l);
  *
  * @return true  if the entry was successfully added to the list
  *         false if the entry could not be added
- *               (e.g. due to the list being uninitialized)
+ *               (e.g. due to the list being uninitialized
+ *               or lack of available memory)
  */
 bool list_append(list *l, const void *entry);
 
@@ -108,12 +124,52 @@ bool list_append(list *l, const void *entry);
  */
 bool list_remove(list *l, const void *entry);
 
+/**
+ * Creates a new list iterator for traversing an existing list.
+ *
+ * This function is to be called before using any other iterator function.
+ * iterator_destroy() should be called when the list is no longer needed.
+ *
+ * @param l  the list to be traversed by the iterator
+ * @param it a pointer to the iterator to be created
+ *
+ * @return true  if the iterator was created successfully
+ *         false if the iterator could not be created
+ *               (e.g. due to lack of available memory)
+ */
 bool iterator_create(const list *l, iterator **it);
 
+/**
+* Deletes an existing list iterator.
+*
+* @param l a pointer to the iterator to be deleted
+*
+* @return true  if the iterator was successfully freed
+*         false if no memory was freed
+*               (e.g. if the provided iterator was never initialized)
+*/
 bool iterator_destroy(iterator **it);
 
+/**
+ * Checks whether a given iteration has more elements.
+ *
+ * @param it the iterator to check 
+ */
 bool iterator_has_next(const iterator *it);
 
-bool iterator_next(iterator *it, void **val);
+/**
+ * Gets the next element in a given iteration.
+ *
+ * It is recommended to call iterator_has_next() before using this function.
+ *
+ * @param it    the current iteration
+ * @param entry a pointer to the address where the retrieved item should be
+ *              stored
+ *
+ * @return true  if an item was retrieved
+ *         false if no item was retrieved
+ *               (e.g. due to the iteration containing no more elements)
+ */
+bool iterator_next(iterator *it, void **entry);
 
 #endif /* _GXTMAKER_LIST_H_ */
