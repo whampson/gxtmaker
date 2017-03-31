@@ -1,12 +1,10 @@
 /*
-* Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
-*
-* Licensed under the MIT License. See LICENSE at top level directory.
-*/
+ * Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
+ *
+ * Licensed under the MIT License. See LICENSE at top level directory.
+ */
 
 #include "list.h"
-
-#include <stdio.h>
 
 struct list_node
 {
@@ -21,7 +19,7 @@ struct list_s           /* typedef'd in list.h as 'list' */
     size_t num_elems;
 };
 
-struct iterator_s
+struct iterator_s       /* typedef'd in list.h as 'iterator' */
 {
     struct list_node *curr;
 };
@@ -40,6 +38,7 @@ bool list_create(list **l)
         return false;
     }
 
+    /* Set default state. */
     (*l)->head = NULL;
     (*l)->tail = NULL;
     (*l)->num_elems = 0;
@@ -133,19 +132,21 @@ bool list_append(list *l, const void *val)
 
     if (l->num_elems == 0)
     {
-        /* Set the head and tail to point to the same node. */
+        /* Set the head and tail to point to the same node because this will
+           be the only element in the list. */
         l->head = n;
         l->tail = l->head;
     }
     else
     {
         /* Insert the new node after the tail,
-           reassign the tail to point to the new node*/
+           reassign the tail to point to the new node. */
         l->tail->next = n;
         l->tail = n;
     }
 
     l->num_elems++;
+
     return true;
 }
 
@@ -160,39 +161,51 @@ bool list_remove(list *l, const void *val)
     struct list_node *prev = NULL;
 
     bool removed = false;
-    while (curr != NULL)
+    while (curr != NULL && !removed)
     {
         /* Checking for address equality, NOT value equality. */
         if (curr->data != val)
         {
+            /* Element not yet found, move onto next element. */
             prev = curr;
             curr = curr->next;
             continue;
         }
 
+        /* Begin removal process.*/
+
         if (l->num_elems == 1)
         {
+            /* Element is the only element in the list,
+               clear both head and tail pointers. */
             l->head = NULL;
             l->tail = NULL;
         }
         else if (curr == l->head)
         {
+            /* Element is at the start of the list,
+               move head pointer to next element. */
             l->head = l->head->next;
         }
         else if (curr == l->tail)
         {
+            /* Element is at the end of the list,
+               move tail pointer to previous element. */
             l->tail = prev;
             l->tail->next = NULL;
         }
         else
         {
+            /* Element is in between to other elements,
+               make 'next' pointer of previous element point to next
+               element. */
             prev->next = curr->next;
         }
 
         free(curr);
+
         l->num_elems--;
         removed = true;
-        break;
     }
 
     return removed;
@@ -205,12 +218,14 @@ bool iterator_create(const list *l, iterator **it)
         return false;
     }
 
+    /* Allocate memory for iterator. */
     *it = (iterator *) malloc(sizeof(iterator));
     if (*it == NULL)
     {
         return false;
     }
 
+    /* Start the iterator at the list's head. */
     (*it)->curr = l->head;
 
     return true;
@@ -241,7 +256,11 @@ bool iterator_next(iterator *it, void **val)
         return false;
     }
 
+    /* Cast to void * to remove 'const' qualifier,
+       data need not be const in client code. */
     *val = (void *) it->curr->data;
+
+    /* Point to next element in list. */
     it->curr = it->curr->next;
 
     return true;
