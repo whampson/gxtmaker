@@ -110,7 +110,7 @@ bool list_clear(list *l)
     return true;
 }
 
-bool list_append(list *l, const void *val)
+bool list_append(list *l, const void *entry)
 {
     if (l == NULL)
     {
@@ -127,7 +127,7 @@ bool list_append(list *l, const void *val)
 
     /* Point the node to its data.
        We're appending to the end of the list, so next should be NULL. */
-    n->data = val;
+    n->data = entry;
     n->next = NULL;
 
     if (l->num_elems == 0)
@@ -150,9 +150,9 @@ bool list_append(list *l, const void *val)
     return true;
 }
 
-bool list_remove(list *l, const void *val)
+bool list_remove(list *l, const void *entry)
 {
-    if (l == NULL)
+    if (list_empty(l))
     {
         return false;
     }
@@ -164,7 +164,7 @@ bool list_remove(list *l, const void *val)
     while (curr != NULL && !removed)
     {
         /* Checking for address equality, NOT value equality. */
-        if (curr->data != val)
+        if (curr->data != entry)
         {
             /* Element not yet found, move onto next element. */
             prev = curr;
@@ -249,16 +249,16 @@ bool iterator_has_next(const iterator *it)
     return it != NULL && it->curr != NULL;
 }
 
-bool iterator_next(iterator *it, void **val)
+bool iterator_next(iterator *it, void **entry)
 {
-    if (!iterator_has_next(it) || val == NULL)
+    if (!iterator_has_next(it) || entry == NULL)
     {
         return false;
     }
 
     /* Cast to void * to remove 'const' qualifier,
        data need not be const in client code. */
-    *val = (void *) it->curr->data;
+    *entry = (void *) it->curr->data;
 
     /* Point to next element in list. */
     it->curr = it->curr->next;
