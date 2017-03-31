@@ -1,8 +1,8 @@
 /*
-* Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
-*
-* Licensed under the MIT License. See LICENSE at top level directory.
-*/
+ * Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
+ *
+ * Licensed under the MIT License. See LICENSE at top level directory.
+ */
 
 #include <stdbool.h>
 #include <stdio.h>
