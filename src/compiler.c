@@ -103,7 +103,8 @@ int compile(const char *src_file, const char *out_file)
     int result;
     while ((bytes_read = fread(buf, sizeof(char), sizeof(buf), src)) > 0)
     {
-        //printf("===== Chunk %d ===== \n", ++chunk_count);
+        //printf("===== Chunk %d ===== \n", chunk_count);
+        chunk_count++;
 
         result = compile_chunk(buf, bytes_read, &state);
         if (result != COMPILE_SUCCESS)
@@ -117,7 +118,21 @@ int compile(const char *src_file, const char *out_file)
         printf("Read %d keys in %d chunks.\n", state.num_keys, chunk_count);
     }
 
+    /* Clear remaining chars in buffer */
+    iterator *it;
+    iterator_create(state.gxt_str_buf, &it);
+    gxt_char *c;
+
+    while (iterator_has_next(it))
+    {
+        iterator_next(it, (void **) &c);
+    free(c);
+    }
+    iterator_destroy(&it);
+
     list_destroy(&state.gxt_str_buf);
+
+    fclose(src);
 
     return result;
 }
@@ -152,7 +167,7 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
                     //printf("Done reading value.\n");
 
                     size_t len = list_size(state->gxt_str_buf) + 1;
-                    printf("%lu\n", len);
+                    //printf("%lu\n", len);
                     gxt_char *buf = (gxt_char *) malloc(len * sizeof(gxt_char));
 
                     iterator *it;
@@ -173,7 +188,11 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
                     iterator_destroy(&it);
                     list_clear(state->gxt_str_buf);
 
-                    printf("%ls\n", buf);
+                    //for (size_t i = 0; i < gxt_strlen(buf); i++)
+                    //{
+                    //        printf("%c", (char) buf[i]);
+                    //}
+                    //printf("\n");
 
                     free(buf);
                 }
