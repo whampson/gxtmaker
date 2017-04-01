@@ -35,7 +35,8 @@ struct compiler_state
     int current_key_chars_read; /* Number of chars read for current key. */
     int num_keys;               /* Number of keys read in total. */
 
-    list *gxt_str_buf;
+    list *tdat_buf;
+    list *tdat;
 };
 
 /*struct gxt_tabl
@@ -64,9 +65,9 @@ struct compiler_state
  */
 
 /* TODO (simplified)
- *   1) Process comments
- *   2) Devise a way to store keys and values
- *   3) Build key and value tables using above
+ *   1) Handle nested comments
+ *   2) Trim GXT strings (leading and trailng whitespace)
+ *   3) Character encoding
  *   4) Output GXT file
  *   5) Develop methods for source file error checking
  */
@@ -95,7 +96,8 @@ int compile(const char *src_file, const char *out_file)
     struct compiler_state state = { 0 };
     state.src_row = 1;
     state.src_col = 1;
-    list_create(&state.gxt_str_buf);
+    list_create(&state.tdat_buf);
+    list_create(&state.tdat);
 
     printf("Reading %s in chunks of %d bytes...\n", src_file, CHUNK_SIZE);
 
@@ -120,17 +122,48 @@ int compile(const char *src_file, const char *out_file)
 
     /* Clear remaining chars in buffer */
     iterator *it;
-    iterator_create(state.gxt_str_buf, &it);
+    iterator_create(state.tdat_buf, &it);
     gxt_char *c;
 
     while (iterator_has_next(it))
     {
         iterator_next(it, (void **) &c);
-    free(c);
+        free(c);
     }
     iterator_destroy(&it);
 
-    list_destroy(&state.gxt_str_buf);
+    size_t tdat_size = 0;
+    iterator_create(state.tdat, &it);
+    while (iterator_has_next(it))
+    {
+        iterator_next(it, (void **) &c);
+        tdat_size += (gxt_strlen(c) + 1) * sizeof(gxt_char);
+    }
+    printf("sizeof(TDAT) = %lu\n", tdat_size);
+    iterator_destroy(&it);
+
+    gxt_char *tdat = (gxt_char *) malloc(tdat_size);
+    int i = 0;
+
+    iterator_create(state.tdat, &it);
+    while (iterator_has_next(it))
+    {
+        iterator_next(it, (void **) &c);
+        for (size_t j = 0; j < gxt_strlen(c); j++)
+        {
+            tdat[i++] = c[j];
+        }
+        tdat[i++] = 0;
+        free(c);
+    }
+    iterator_destroy(&it);
+
+    hex_dump((void *) tdat, tdat_size);
+
+    free(tdat);
+
+    list_destroy(&state.tdat_buf);
+    list_destroy(&state.tdat);
 
     fclose(src);
 
@@ -162,39 +195,37 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
                 continue;
 
             case START_OF_KEY:
+                if (state->is_reading_comment)
+                {
+                    break;
+                }
+
                 if (state->val_encountered)
                 {
                     //printf("Done reading value.\n");
 
-                    size_t len = list_size(state->gxt_str_buf) + 1;
-                    //printf("%lu\n", len);
-                    gxt_char *buf = (gxt_char *) malloc(len * sizeof(gxt_char));
+                    size_t len = list_size(state->tdat_buf);
+                    gxt_char *buf = (gxt_char *) malloc((len + 1) * sizeof(gxt_char));
 
                     iterator *it;
-                    iterator_create(state->gxt_str_buf, &it);
+                    iterator_create(state->tdat_buf, &it);
 
                     int pos = 0;
                     gxt_char *c;
                     while (iterator_has_next(it))
                     {
                         iterator_next(it, (void **) &c);
-                        //printf("%lc", *c);
                         buf[pos++] = *c;
                         free(c);
                     }
-                    buf[len - 1] = 0;
-                    //printf("\n");
+                    buf[len] = 0;
 
                     iterator_destroy(&it);
-                    list_clear(state->gxt_str_buf);
+                    list_clear(state->tdat_buf);
 
-                    //for (size_t i = 0; i < gxt_strlen(buf); i++)
-                    //{
-                    //        printf("%c", (char) buf[i]);
-                    //}
-                    //printf("\n");
+                    list_append(state->tdat, (void *) buf);
 
-                    free(buf);
+                    //free(buf);
                 }
 
                 state->is_reading_key = true;
@@ -208,7 +239,7 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
                 state->is_reading_key = false;
                 state->is_reading_val = false;
                 state->is_reading_comment = true;
-                state->key_encountered = true;
+                //state->key_encountered = true;
                 continue;
         }
 
@@ -236,7 +267,7 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
 
 static int process_key_token(char tok, struct compiler_state *state)
 {
-    if (tok == END_OF_KEY)
+    if (tok == END_OF_KEY && state->is_reading_key && !state->is_reading_comment)
     {
         //printf("Done reading key.\n");
         state->is_reading_key = false;
@@ -278,7 +309,7 @@ static int process_value_token(char tok, struct compiler_state *state)
         gxt_char *c = (gxt_char *) malloc(sizeof(gxt_char));
         *c = tok;
 
-        list_append(state->gxt_str_buf, (void *) c);
+        list_append(state->tdat_buf, (void *) c);
     }
 
     return COMPILE_SUCCESS;
@@ -286,11 +317,11 @@ static int process_value_token(char tok, struct compiler_state *state)
 
 static int process_comment_token(char tok, struct compiler_state *state)
 {
-    if (tok == END_OF_COMMENT)
+    if (tok == END_OF_COMMENT && state->is_reading_comment)
     {
         //printf("Done reading comment.\n");
         state->is_reading_key = false;
-        state->is_reading_val = false;
+        state->is_reading_val = true;
         state->is_reading_comment = false;
         state->key_encountered = false;
         //state->val_encountered = false;
