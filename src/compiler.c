@@ -11,6 +11,7 @@
 #include "errwarn.h"
 #include "gxt.h"
 #include "io.h"
+#include "list.h"
 
 #define CHUNK_SIZE 1024
 
@@ -33,6 +34,8 @@ struct compiler_state
 
     int current_key_chars_read; /* Number of chars read for current key. */
     int num_keys;               /* Number of keys read in total. */
+
+    list *gxt_str_buf;
 };
 
 /*struct gxt_tabl
@@ -92,6 +95,7 @@ int compile(const char *src_file, const char *out_file)
     struct compiler_state state = { 0 };
     state.src_row = 1;
     state.src_col = 1;
+    list_create(&state.gxt_str_buf);
 
     printf("Reading %s in chunks of %d bytes...\n", src_file, CHUNK_SIZE);
 
@@ -99,18 +103,23 @@ int compile(const char *src_file, const char *out_file)
     int result;
     while ((bytes_read = fread(buf, sizeof(char), sizeof(buf), src)) > 0)
     {
-        printf("===== Chunk %d ===== \n", ++chunk_count);
+        //printf("===== Chunk %d ===== \n", ++chunk_count);
 
         result = compile_chunk(buf, bytes_read, &state);
-        if (result != 0)
+        if (result != COMPILE_SUCCESS)
         {
-            return result;
+            break;
         }
     }
 
-    printf("Read %d keys in %d chunks.\n", state.num_keys, chunk_count);
+    if (result == COMPILE_SUCCESS)
+    {
+        printf("Read %d keys in %d chunks.\n", state.num_keys, chunk_count);
+    }
 
-    return COMPILE_SUCCESS;
+    list_destroy(&state.gxt_str_buf);
+
+    return result;
 }
 
 static int compile_chunk(const char *chunk, size_t chunk_size,
@@ -140,7 +149,33 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
             case START_OF_KEY:
                 if (state->val_encountered)
                 {
-                    printf("Done reading value.\n");
+                    //printf("Done reading value.\n");
+
+                    size_t len = list_size(state->gxt_str_buf) + 1;
+                    printf("%lu\n", len);
+                    gxt_char *buf = (gxt_char *) malloc(len * sizeof(gxt_char));
+
+                    iterator *it;
+                    iterator_create(state->gxt_str_buf, &it);
+
+                    int pos = 0;
+                    gxt_char *c;
+                    while (iterator_has_next(it))
+                    {
+                        iterator_next(it, (void **) &c);
+                        //printf("%lc", *c);
+                        buf[pos++] = *c;
+                        free(c);
+                    }
+                    buf[len - 1] = 0;
+                    //printf("\n");
+
+                    iterator_destroy(&it);
+                    list_clear(state->gxt_str_buf);
+
+                    printf("%ls\n", buf);
+
+                    free(buf);
                 }
 
                 state->is_reading_key = true;
@@ -184,7 +219,7 @@ static int process_key_token(char tok, struct compiler_state *state)
 {
     if (tok == END_OF_KEY)
     {
-        printf("Done reading key.\n");
+        //printf("Done reading key.\n");
         state->is_reading_key = false;
         state->is_reading_val = true;
         state->is_reading_comment = false;
@@ -204,7 +239,7 @@ static int process_key_token(char tok, struct compiler_state *state)
         return COMPILE_GXT_KEY_TOO_LONG;
     }
 
-    printf("K(%02d:%02d) = %c\n", state->src_row, state->src_col, tok);
+    //printf("K(%02d:%02d) = %c\n", state->src_row, state->src_col, tok);
 
     return COMPILE_SUCCESS;
 }
@@ -218,8 +253,13 @@ static int process_value_token(char tok, struct compiler_state *state)
 
     if (state->val_encountered)
     {
-        printf("V(%02d:%02d) = %c\n",
-               state->src_row, state->src_col, tok);
+        //printf("V(%02d:%02d) = %c\n",
+        //       state->src_row, state->src_col, tok);
+
+        gxt_char *c = (gxt_char *) malloc(sizeof(gxt_char));
+        *c = tok;
+
+        list_append(state->gxt_str_buf, (void *) c);
     }
 
     return COMPILE_SUCCESS;
@@ -229,17 +269,17 @@ static int process_comment_token(char tok, struct compiler_state *state)
 {
     if (tok == END_OF_COMMENT)
     {
-        printf("Done reading comment.\n");
+        //printf("Done reading comment.\n");
         state->is_reading_key = false;
         state->is_reading_val = false;
         state->is_reading_comment = false;
         state->key_encountered = false;
-        state->val_encountered = false;
+        //state->val_encountered = false;
 
         return COMPILE_SUCCESS;
     }
-    printf("C(%02d:%02d) = %c\n",
-           state->src_row, state->src_col, tok);
+    //printf("C(%02d:%02d) = %c\n",
+    //       state->src_row, state->src_col, tok);
 
     return COMPILE_SUCCESS;
 }
