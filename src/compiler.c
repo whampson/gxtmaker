@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "compiler.h"
 #include "errwarn.h"
@@ -37,6 +38,11 @@ struct compiler_state
 
     list *tdat_buf;
     list *tdat;
+
+    uint32_t tdat_offset;
+
+    struct gxt_key *key_buf;
+    list *tkey;
 };
 
 /*struct gxt_tabl
@@ -98,6 +104,7 @@ int compile(const char *src_file, const char *out_file)
     state.src_col = 1;
     list_create(&state.tdat_buf);
     list_create(&state.tdat);
+    list_create(&state.tkey);
 
     printf("Reading %s in chunks of %d bytes...\n", src_file, CHUNK_SIZE);
 
@@ -115,12 +122,13 @@ int compile(const char *src_file, const char *out_file)
         }
     }
 
-    if (result == COMPILE_SUCCESS)
-    {
-        printf("Read %d keys in %d chunks.\n", state.num_keys, chunk_count);
-    }
+    fclose(src);
 
-    /* Clear remaining chars in buffer */
+    /* TODO: Ensure clean exit when compilation fails */
+
+    printf("Read %d keys in %d chunks.\n", (int) list_size(state.tkey), chunk_count);
+
+    /* Clear remaining chars in TDAT buffer */
     iterator *it;
     iterator_create(state.tdat_buf, &it);
     gxt_char *c;
@@ -132,6 +140,31 @@ int compile(const char *src_file, const char *out_file)
     }
     iterator_destroy(&it);
 
+    /* Clear TKEY buffer */
+    free(state.key_buf);
+
+    /* Build TKEY*/
+    size_t tkey_size = list_size(state.tkey) * sizeof(struct gxt_key);
+    printf("sizeof(TKEY) = %lu\n", tkey_size);
+
+    struct gxt_key *tkey = (struct gxt_key *) malloc(tkey_size);
+    struct gxt_key *k;
+
+    int i = 0;
+    iterator_create(state.tkey, &it);
+    while (iterator_has_next(it))
+    {
+        iterator_next(it, (void **) &k);
+        tkey[i++] = *k;
+        free(k);
+    }
+    iterator_destroy(&it);
+
+    /* Dump TKEY */
+    //hex_dump((void *) tkey, tkey_size);
+    //printf("\n\n");
+
+    /* Build TDAT */
     size_t tdat_size = 0;
     iterator_create(state.tdat, &it);
     while (iterator_has_next(it))
@@ -143,7 +176,7 @@ int compile(const char *src_file, const char *out_file)
     iterator_destroy(&it);
 
     gxt_char *tdat = (gxt_char *) malloc(tdat_size);
-    int i = 0;
+    i = 0;
 
     iterator_create(state.tdat, &it);
     while (iterator_has_next(it))
@@ -158,14 +191,38 @@ int compile(const char *src_file, const char *out_file)
     }
     iterator_destroy(&it);
 
-    hex_dump((void *) tdat, tdat_size);
+    /* Dump TDAT */
+    //hex_dump((void *) tdat, tdat_size);
+    //printf("\n");
+
+    struct gxt_block_header tkey_header;
+    strncpy(tkey_header.sig, "TKEY", 4);
+    tkey_header.size = tkey_size;
+
+    struct gxt_block_header tdat_header;
+    strncpy(tdat_header.sig, "TDAT", 4);
+    tdat_header.size = tdat_size;
+
+    FILE *dest = fopen(out_file, "wb");
+    if (dest == NULL)
+    {
+        error(E_FILE_UNREADABLE, out_file);
+        return COMPILE_FILE_UNREADABLE;
+    }
+
+    fwrite(&tkey_header, sizeof(struct gxt_block_header), 1, dest);
+    fwrite(tkey, tkey_size, 1, dest);
+    fwrite(&tdat_header, sizeof(struct gxt_block_header), 1, dest);
+    fwrite(tdat, tdat_size, 1, dest);
+
+    fclose(dest);
 
     free(tdat);
+    free(tkey);
 
     list_destroy(&state.tdat_buf);
     list_destroy(&state.tdat);
-
-    fclose(src);
+    list_destroy(&state.tkey);
 
     return result;
 }
@@ -173,12 +230,12 @@ int compile(const char *src_file, const char *out_file)
 static int compile_chunk(const char *chunk, size_t chunk_size,
                          struct compiler_state *state)
 {
-    char tok;
+    unsigned char tok;
     int result = 0;
 
     for (size_t i = 0; i < chunk_size; i++, state->src_col++)
     {
-        tok = chunk[i];
+        tok = (unsigned char) chunk[i];
 
         /* Check whether compiler needs to switch processing mode */
         switch (tok)
@@ -224,9 +281,15 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
                     list_clear(state->tdat_buf);
 
                     list_append(state->tdat, (void *) buf);
+                    state->tdat_offset += sizeof(gxt_char); /* NUL char */
+
+                    list_append(state->tkey, (void *) state->key_buf);
 
                     //free(buf);
                 }
+
+                state->key_buf = (struct gxt_key *) calloc(1, sizeof(struct gxt_key));
+                state->key_buf->offset = state->tdat_offset;
 
                 state->is_reading_key = true;
                 state->is_reading_val = false;
@@ -265,7 +328,7 @@ static int compile_chunk(const char *chunk, size_t chunk_size,
     return result;
 }
 
-static int process_key_token(char tok, struct compiler_state *state)
+static int process_key_token(unsigned char tok, struct compiler_state *state)
 {
     if (tok == END_OF_KEY && state->is_reading_key && !state->is_reading_comment)
     {
@@ -280,6 +343,7 @@ static int process_key_token(char tok, struct compiler_state *state)
         return COMPILE_SUCCESS;
     }
 
+    state->key_buf->name[state->current_key_chars_read] = tok;
     state->current_key_chars_read++;
     if (state->current_key_chars_read >= GXT_KEY_MAX_LEN)
     {
@@ -294,7 +358,7 @@ static int process_key_token(char tok, struct compiler_state *state)
     return COMPILE_SUCCESS;
 }
 
-static int process_value_token(char tok, struct compiler_state *state)
+static int process_value_token(unsigned char tok, struct compiler_state *state)
 {
     if (!state->val_encountered && !is_whitespace(tok))
     {
@@ -310,12 +374,14 @@ static int process_value_token(char tok, struct compiler_state *state)
         *c = tok;
 
         list_append(state->tdat_buf, (void *) c);
+
+        state->tdat_offset += sizeof(gxt_char);
     }
 
     return COMPILE_SUCCESS;
 }
 
-static int process_comment_token(char tok, struct compiler_state *state)
+static int process_comment_token(unsigned char tok, struct compiler_state *state)
 {
     if (tok == END_OF_COMMENT && state->is_reading_comment)
     {
