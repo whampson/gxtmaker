@@ -8,6 +8,7 @@
 #define _GXTMAKER_GXT_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #define GXT_KEY_MAX_LEN 8
 
