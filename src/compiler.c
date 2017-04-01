@@ -81,9 +81,9 @@ struct compiler_state
 
 static int compile_chunk(const char *chunk, size_t chunk_size,
                          struct compiler_state *state);
-static int process_key_token(char tok, struct compiler_state *state);
-static int process_value_token(char tok, struct compiler_state *state);
-static int process_comment_token(char tok, struct compiler_state *state);
+static int process_key_token(unsigned char tok, struct compiler_state *state);
+static int process_value_token(unsigned char tok, struct compiler_state *state);
+static int process_comment_token(unsigned char tok, struct compiler_state *state);
 
 static bool is_whitespace(char c);
 
