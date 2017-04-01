@@ -26,7 +26,7 @@ void hex_dump(const void *buf, size_t size)
     do
     {
         /* Print current offset in buffer */
-        printf("%04x  ", off);
+        printf("%08x  ", off);
 
         /* Print a line of bytes in hexadecimal */
         row_len = MIN(NUM_BYTES_PER_LINE, size - off);
