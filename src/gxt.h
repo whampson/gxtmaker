@@ -19,7 +19,13 @@ struct gxt_key
 {
     uint32_t offset;        /* Offset of GXT string in TDAT,
                                relative to start of first entry. */
-    unsigned char name[8];  /* TDAT entry name (7 chars + 1 NUL) */
+    char name[8];           /* TDAT entry name (7 chars + 1 NUL) */
+};
+
+struct gxt_block_header
+{
+    char sig[4];
+    uint32_t size;
 };
 
 /**
