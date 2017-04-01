@@ -6,5 +6,5 @@ CMakeLists.txt	text
 *.md            text
 *.c             text
 *.h             text
-*.gxt		binary
-*.txt		binary
+*.gxt           binary
+*.txt           binary
