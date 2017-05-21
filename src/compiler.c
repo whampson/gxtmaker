@@ -106,7 +106,7 @@ int compile(const char *src_file, const char *out_file)
     list_create(&state.tdat);
     list_create(&state.tkey);
 
-    printf("Reading %s in chunks of %d bytes...\n", src_file, CHUNK_SIZE);
+    //printf("Reading %s in chunks of %d bytes...\n", src_file, CHUNK_SIZE);
 
     char buf[CHUNK_SIZE];
     int result;
@@ -126,7 +126,7 @@ int compile(const char *src_file, const char *out_file)
 
     /* TODO: Ensure clean exit when compilation fails */
 
-    printf("Read %d keys in %d chunks.\n", (int) list_size(state.tkey), chunk_count);
+    //printf("Read %d keys in %d chunks.\n", (int) list_size(state.tkey), chunk_count);
 
     /* Clear remaining chars in TDAT buffer */
     iterator *it;
@@ -145,7 +145,7 @@ int compile(const char *src_file, const char *out_file)
 
     /* Build TKEY*/
     size_t tkey_size = list_size(state.tkey) * sizeof(struct gxt_key);
-    printf("sizeof(TKEY) = %lu\n", tkey_size);
+    //printf("sizeof(TKEY) = %lu\n", tkey_size);
 
     struct gxt_key *tkey = (struct gxt_key *) malloc(tkey_size);
     struct gxt_key *k;
@@ -172,7 +172,7 @@ int compile(const char *src_file, const char *out_file)
         iterator_next(it, (void **) &c);
         tdat_size += (gxt_strlen(c) + 1) * sizeof(gxt_char);
     }
-    printf("sizeof(TDAT) = %lu\n", tdat_size);
+    //printf("sizeof(TDAT) = %lu\n", tdat_size);
     iterator_destroy(&it);
 
     gxt_char *tdat = (gxt_char *) malloc(tdat_size);
