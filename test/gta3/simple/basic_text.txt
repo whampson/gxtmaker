@@ -1,0 +1,9 @@
+[TEST1]
+This is a sample string.
+
+{This is a comment}
+[TEST2]
+This is another sample string.
+
+[DUMMY]
+This needs to be here as the last label does not get compiled.

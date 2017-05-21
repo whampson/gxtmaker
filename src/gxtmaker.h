@@ -1,14 +1,14 @@
 /*
-* Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
-*
-* Licensed under the MIT License. See LICENSE at top level directory.
-*/
+ * Copyright (c) 2017 Wes Hampson <thehambone93@gmail.com>
+ *
+ * Licensed under the MIT License. See LICENSE at top level directory.
+ */
 
-#ifndef _GXTMAKER_H_
-#define _GXTMAKER_H_
+#ifndef _GXTMAKER_GXTMAKER_H_
+#define _GXTMAKER_GXTMAKER_H_
 
 #define GXTMAKER_VERSION_MAJOR 0
-#define GXTMAKER_VERSION_MINOR 0
+#define GXTMAKER_VERSION_MINOR 1
 #define GXTMAKER_VERSION_PATCH 0
 #define GXTMAKER_VERSION_BUILD ""  /* Additional build info goes here. */
 
@@ -36,4 +36,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n\
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n\
 SOFTWARE."
 
-#endif /* _GXTMAKER_H_ */
+enum exit_status
+{
+    GXTMAKER_EXIT_SUCCESS           = 0,
+    GXTMAKER_EXIT_ARGUMENT_ERROR    = 1
+};
+
+#endif /* _GXTMAKER_GXTMAKER_H_ */

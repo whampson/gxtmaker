@@ -7,7 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "compiler.h"
+#include "errwarn.h"
 #include "gxtmaker.h"
+#include "gxt.h"
+
+#include "list.h"
 
 void show_help_info(void)
 {
@@ -30,15 +35,21 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        show_help_info();
+        error(E_MISSING_INPUT_FILE);
+        return GXTMAKER_EXIT_ARGUMENT_ERROR;
     }
     else if (strcmp(argv[1], "--version") == 0)
     {
         show_version_info();
+        return GXTMAKER_EXIT_SUCCESS;
     }
-    else
+    else if (strcmp(argv[1], "--help") == 0)
     {
         show_help_info();
+        return GXTMAKER_EXIT_SUCCESS;
     }
-    return 0;
+
+    int compile_status = compile(argv[1], "./a.gxt");
+
+    return compile_status;
 }
