@@ -4,7 +4,9 @@
  * Licensed under the MIT License. See LICENSE at top level directory.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "io.h"
 
@@ -12,6 +14,12 @@
 #define NUM_CHARS_PER_BYTE 3
 
 #define MIN(a, b) ((a < b) ? (a) : (b))
+
+/**
+ * Returns a pointer to the last non-empty token of a given string. Tokens are
+ * split up by the specified delimiter character.
+ */
+static bool get_last_token(const char *str, char **tok, char delim);
 
 void hex_dump(const void *buf, size_t size)
 {
@@ -70,4 +78,60 @@ void hex_dump(const void *buf, size_t size)
         }
     }
     while (off < size);
+}
+
+const char * get_filename(const char *path)
+{
+    char *tok;
+    
+    /* Get last piece of Unix-style path. */
+    if (get_last_token(path, &tok, '/'))
+    {
+        return tok;
+    }
+
+    /* Get last piece of Windows-style path. */
+    if (get_last_token(path, &tok, '\\'))
+    {
+        return tok;
+    }
+
+    /* Path separator not found, assume the path itself is the filename. */
+    return path;
+}
+
+static bool get_last_token(const char *str, char **tok, char delim)
+{
+    *tok == NULL;
+
+    size_t len = strlen(str);
+    if (len == 0)
+    {
+        return false;
+    }
+
+    /* Start at end of string and move backwards until delimiter found.*/
+    char *end = str + len - 1;
+    char *curr = end;
+    bool delim_found = false;
+    while (curr != str)
+    {
+        /* We're looking for the last NON-EMPTY token, so we must ignore the
+           empty token that results from the delimiter being located at the
+           very end of the string. */
+        if (*curr == delim && curr != end)
+        {
+            delim_found = true;
+            break;
+        }
+        curr--;
+    }
+
+    if (delim_found)
+    {
+        size_t tokpos = (curr - str) + 1;
+        *tok = (char *) (str + tokpos);
+    }
+
+    return delim_found;
 }

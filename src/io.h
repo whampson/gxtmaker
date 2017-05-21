@@ -17,4 +17,9 @@
  */
 void hex_dump(const void *buf, size_t size);
 
+/**
+ * Extracts the file name from the specified path.
+ */
+const char * get_filename(const char *path);
+
 #endif /* _GXTMAKER_IO_H_ */
