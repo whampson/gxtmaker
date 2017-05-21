@@ -11,6 +11,7 @@
 #include "compiler.h"
 #include "errwarn.h"
 #include "gxt.h"
+#include "gxtmaker.h"
 #include "io.h"
 #include "list.h"
 
@@ -93,7 +94,7 @@ int compile(const char *src_file, const char *out_file)
     if (src == NULL)
     {
         error(E_FILE_UNREADABLE, src_file);
-        return COMPILE_FILE_UNREADABLE;
+        return GXTMAKER_EXIT_IO_ERROR;
     }
 
     int bytes_read = 0;
@@ -116,7 +117,7 @@ int compile(const char *src_file, const char *out_file)
         chunk_count++;
 
         result = compile_chunk(buf, bytes_read, &state);
-        if (result != COMPILE_SUCCESS)
+        if (result != 0)
         {
             break;
         }
@@ -207,7 +208,7 @@ int compile(const char *src_file, const char *out_file)
     if (dest == NULL)
     {
         error(E_FILE_UNREADABLE, out_file);
-        return COMPILE_FILE_UNREADABLE;
+        return GXTMAKER_EXIT_IO_ERROR;
     }
 
     fwrite(&tkey_header, sizeof(struct gxt_block_header), 1, dest);
@@ -340,7 +341,7 @@ static int process_key_token(unsigned char tok, struct compiler_state *state)
         state->val_encountered = false;
         state->num_keys++;
 
-        return COMPILE_SUCCESS;
+        return 0;
     }
 
     state->key_buf->name[state->current_key_chars_read] = tok;
@@ -350,12 +351,12 @@ static int process_key_token(unsigned char tok, struct compiler_state *state)
         fprintf(stderr, "gxt key exceeds maximum length (%02d:%02d)\n",
                 state->src_row, state->src_col);
 
-        return COMPILE_GXT_KEY_TOO_LONG;
+        return GXTMAKER_EXIT_COMPILATION_ERROR;
     }
 
     //printf("K(%02d:%02d) = %c\n", state->src_row, state->src_col, tok);
 
-    return COMPILE_SUCCESS;
+    return 0;
 }
 
 static int process_value_token(unsigned char tok, struct compiler_state *state)
@@ -378,7 +379,7 @@ static int process_value_token(unsigned char tok, struct compiler_state *state)
         state->tdat_offset += sizeof(gxt_char);
     }
 
-    return COMPILE_SUCCESS;
+    return 0;
 }
 
 static int process_comment_token(unsigned char tok, struct compiler_state *state)
@@ -392,12 +393,12 @@ static int process_comment_token(unsigned char tok, struct compiler_state *state
         state->key_encountered = false;
         //state->val_encountered = false;
 
-        return COMPILE_SUCCESS;
+        return 0;
     }
     //printf("C(%02d:%02d) = %c\n",
     //       state->src_row, state->src_col, tok);
 
-    return COMPILE_SUCCESS;
+    return 0;
 }
 
 static bool is_whitespace(char c)

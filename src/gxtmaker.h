@@ -8,7 +8,7 @@
 #define _GXTMAKER_GXTMAKER_H_
 
 #define GXTMAKER_VERSION_MAJOR 0
-#define GXTMAKER_VERSION_MINOR 1
+#define GXTMAKER_VERSION_MINOR 2
 #define GXTMAKER_VERSION_PATCH 0
 #define GXTMAKER_VERSION_BUILD ""  /* Additional build info goes here. */
 
@@ -39,7 +39,9 @@ SOFTWARE."
 enum exit_status
 {
     GXTMAKER_EXIT_SUCCESS           = 0,
-    GXTMAKER_EXIT_ARGUMENT_ERROR    = 1
+    GXTMAKER_EXIT_ARGUMENT_ERROR    = 1,
+    GXTMAKER_EXIT_IO_ERROR          = 2,
+    GXTMAKER_EXIT_COMPILATION_ERROR = 3
 };
 
 #endif /* _GXTMAKER_GXTMAKER_H_ */

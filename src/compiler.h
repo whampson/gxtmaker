@@ -7,15 +7,9 @@
 #ifndef _GXTMAKER_COMPILER_H_
 #define _GXTMAKER_COMPILER_H_
 
-enum compiler_status
-{
-    COMPILE_SUCCESS             = 0x00,
-    COMPILE_FILE_UNREADABLE     = 0x80,
-    COMPILE_GXT_KEY_TOO_LONG    = 0x81
-};
-
-/*
- * Translates the specified GXT source file into a proper GXT file.
+/**
+ * Translates the specified GTA Text source file into a properly-formatted GXT
+ * file.
  *
  * @param src_file the path to the source file
  * @param out_file the path to the compiled file

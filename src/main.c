@@ -49,7 +49,5 @@ int main(int argc, char *argv[])
         return GXTMAKER_EXIT_SUCCESS;
     }
 
-    int compile_status = compile(argv[1], "./a.gxt");
-
-    return compile_status;
+    return compile(argv[1], "./a.gxt");
 }
