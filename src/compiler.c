@@ -90,10 +90,11 @@ static bool is_whitespace(char c);
 
 int compile(const char *src_file, const char *out_file)
 {
+    const char *fname = get_filename(src_file);
     FILE *src = fopen(src_file, "rb");
     if (src == NULL)
     {
-        error(E_FILE_UNREADABLE, src_file);
+        error(E_FILE_UNREADABLE, fname);
         return GXTMAKER_EXIT_IO_ERROR;
     }
 
